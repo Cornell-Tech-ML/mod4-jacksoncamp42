@@ -7,8 +7,6 @@ from numba import prange
 from .autodiff import Context
 from .tensor import Tensor
 from .tensor_data import (
-    MAX_DIMS,
-    Index,
     Shape,
     Storage,
     Strides,
@@ -87,8 +85,8 @@ def _tensor_conv1d(
         and in_channels == in_channels_
         and out_channels == out_channels_
     )
-    s1 = input_strides
-    s2 = weight_strides
+    # s1 = input_strides
+    # s2 = weight_strides
 
     # TODO: Implement for Task 4.1.
     # Parallelize over independent batch and output channel computations
@@ -162,6 +160,21 @@ class Conv1dFun(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+        """Compute the gradient of the convolution operation.
+
+        Args:
+        ----
+            ctx : Context
+                The context object containing saved values.
+            grad_output : Tensor
+                The gradient of the output tensor.
+
+        Returns:
+        -------
+            Tuple[Tensor, Tensor]
+                Gradients with respect to the input and weight tensors.
+
+        """
         input, weight = ctx.saved_values
         batch, in_channels, w = input.shape
         out_channels, in_channels, kw = weight.shape
@@ -335,6 +348,21 @@ class Conv2dFun(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+        """Compute the gradient of the convolution operation.
+
+        Args:
+        ----
+            ctx : Context
+                The context object containing saved values.
+            grad_output : Tensor
+                The gradient of the output tensor.
+
+        Returns:
+        -------
+            Tuple[Tensor, Tensor]
+                Gradients with respect to the input and weight tensors.
+
+        """
         input, weight = ctx.saved_values
         batch, in_channels, h, w = input.shape
         out_channels, in_channels, kh, kw = weight.shape

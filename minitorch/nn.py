@@ -75,10 +75,12 @@ def argmax(input: Tensor, dim: int) -> Tensor:
     """Create a boolean mask showing where maximum values occur along specified dimension.
 
     Args:
+    ----
         input: Input tensor
         dim: Dimension to find max values along
 
     Returns:
+    -------
         Boolean tensor with True at max value positions
 
     """
@@ -95,6 +97,7 @@ class Max(Function):
         """Forward pass computes max values along given dimension.
 
         Args:
+        ----
             ctx: Context for backprop
             input_tensor: Tensor to reduce
             dimension: Which dimension to reduce along
@@ -109,10 +112,12 @@ class Max(Function):
         """Backward pass routes gradients to max value positions.
 
         Args:
+        ----
             ctx: Context with saved values
             grad_output: Incoming gradient
 
         Returns:
+        -------
             Tuple of (input gradient, dimension gradient)
 
         """
@@ -125,10 +130,12 @@ def max(input: Tensor, dim: int) -> Tensor:
     """Take maximum values along specified dimension.
 
     Args:
+    ----
         input: Input tensor
         dim: Dimension to reduce
 
     Returns:
+    -------
         Tensor of max values
 
     """
@@ -139,10 +146,12 @@ def softmax(input: Tensor, dim: int) -> Tensor:
     """Compute softmax probabilities along specified dimension.
 
     Args:
+    ----
         input: Input tensor
         dim: Dimension for softmax
 
     Returns:
+    -------
         Tensor of softmax probabilities
 
     """
@@ -161,10 +170,12 @@ def logsoftmax(input: Tensor, dim: int) -> Tensor:
     """Compute log softmax values along specified dimension.
 
     Args:
+    ----
         input: Input tensor
         dim: Dimension for logsoftmax
 
     Returns:
+    -------
         Tensor of log softmax values
 
     """
@@ -175,10 +186,12 @@ def maxpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
     """Apply 2D max pooling with specified kernel size.
 
     Args:
+    ----
         input: Input tensor (batch x channels x height x width)
         kernel: (kernel_height, kernel_width) tuple
 
     Returns:
+    -------
         Pooled output tensor
 
     """
@@ -199,11 +212,13 @@ def dropout(input: Tensor, p: float = 0.5, ignore: bool = False) -> Tensor:
     """Apply dropout with specified probability.
 
     Args:
+    ----
         input: Input tensor
         p: Dropout probability
         ignore: If True, return input unchanged
 
     Returns:
+    -------
         Output with dropout applied
 
     """
