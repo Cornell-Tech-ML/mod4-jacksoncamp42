@@ -31,8 +31,52 @@ def test_avg(t: Tensor) -> None:
 @pytest.mark.task4_4
 @given(tensors(shape=(2, 3, 4)))
 def test_max(t: Tensor) -> None:
-    # TODO: Implement for Task 4.4.
-    raise NotImplementedError("Need to implement for Task 4.4")
+    # Test max reduction along the last dimension (dim=2)
+    out = minitorch.max(t, dim=2)
+
+    # Verify the shape of the output
+    assert out.shape == (2, 3, 1), "Shape mismatch for max reduction along dim=2."
+
+    # Verify the correctness of the max values
+    for b in range(2):
+        for c in range(3):
+            expected = max([t[b, c, k] for k in range(4)])
+            assert_close(out[b, c, 0], expected)
+
+    # Test max reduction along the middle dimension (dim=1)
+    out = minitorch.max(t, dim=1)
+
+    # Verify the shape of the output
+    assert out.shape == (2, 1, 4), "Shape mismatch for max reduction along dim=1."
+
+    # Verify the correctness of the max values
+    for b in range(2):
+        for w in range(4):
+            expected = max([t[b, c, w] for c in range(3)])
+            assert_close(out[b, 0, w], expected)
+
+    # Test max reduction along the first dimension (dim=0)
+    out = minitorch.max(t, dim=0)
+
+    # Verify the shape of the output
+    assert out.shape == (1, 3, 4), "Shape mismatch for max reduction along dim=0."
+
+    # Verify the correctness of the max values
+    for c in range(3):
+        for w in range(4):
+            expected = max([t[b, c, w] for b in range(2)])
+            assert_close(out[0, c, w], expected)
+
+    # Gradient checks for max reduction
+    # Add small random noise to avoid issues with duplicate max values
+    perturbed_t0 = t + minitorch.rand(t.shape) * 1e-5  # For dim=0
+    perturbed_t1 = t + minitorch.rand(t.shape) * 1e-5  # For dim=1
+    perturbed_t2 = t + minitorch.rand(t.shape) * 1e-5  # For dim=2
+
+    # Perform gradient checks
+    minitorch.grad_check(lambda t: minitorch.max(t, dim=0), perturbed_t0)
+    minitorch.grad_check(lambda t: minitorch.max(t, dim=1), perturbed_t1)
+    minitorch.grad_check(lambda t: minitorch.max(t, dim=2), perturbed_t2)
 
 
 @pytest.mark.task4_4

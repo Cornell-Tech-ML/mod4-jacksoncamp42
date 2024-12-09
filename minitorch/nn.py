@@ -66,3 +66,152 @@ def avgpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
     return pooled_tensor.mean(dim=4).view(
         pooled_tensor.shape[0], pooled_tensor.shape[1], h_out, w_out
     )
+
+
+fast_max = FastOps.reduce(operators.max, -float("inf"))
+
+
+def argmax(input: Tensor, dim: int) -> Tensor:
+    """Create a boolean mask showing where maximum values occur along specified dimension.
+
+    Args:
+        input: Input tensor
+        dim: Dimension to find max values along
+
+    Returns:
+        Boolean tensor with True at max value positions
+
+    """
+    # Get max values along dimension
+    max_vals = fast_max(input, dim)
+
+    # Create mask by comparing input to max values
+    return input == max_vals
+
+
+class Max(Function):
+    @staticmethod
+    def forward(ctx: Context, input_tensor: Tensor, dimension: Tensor) -> Tensor:
+        """Forward pass computes max values along given dimension.
+
+        Args:
+            ctx: Context for backprop
+            input_tensor: Tensor to reduce
+            dimension: Which dimension to reduce along
+
+        """
+        dim = int(dimension.item())
+        ctx.save_for_backward(input_tensor, dim)
+        return fast_max(input_tensor, dim)
+
+    @staticmethod
+    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
+        """Backward pass routes gradients to max value positions.
+
+        Args:
+            ctx: Context with saved values
+            grad_output: Incoming gradient
+
+        Returns:
+            Tuple of (input gradient, dimension gradient)
+
+        """
+        input_tensor, dim = ctx.saved_values
+        max_positions = argmax(input_tensor, dim)
+        return max_positions * grad_output, 0.0
+
+
+def max(input: Tensor, dim: int) -> Tensor:
+    """Take maximum values along specified dimension.
+
+    Args:
+        input: Input tensor
+        dim: Dimension to reduce
+
+    Returns:
+        Tensor of max values
+
+    """
+    return Max.apply(input, tensor(dim))
+
+
+def softmax(input: Tensor, dim: int) -> Tensor:
+    """Compute softmax probabilities along specified dimension.
+
+    Args:
+        input: Input tensor
+        dim: Dimension for softmax
+
+    Returns:
+        Tensor of softmax probabilities
+
+    """
+    # Subtract max for numerical stability
+    max_vals = max(input, dim)
+    shifted = input - max_vals
+
+    # Compute normalized exponentials
+    exp_vals = shifted.exp()
+    sum_exp = exp_vals.sum(dim)
+
+    return exp_vals / sum_exp
+
+
+def logsoftmax(input: Tensor, dim: int) -> Tensor:
+    """Compute log softmax values along specified dimension.
+
+    Args:
+        input: Input tensor
+        dim: Dimension for logsoftmax
+
+    Returns:
+        Tensor of log softmax values
+
+    """
+    return softmax(input, dim).log()
+
+
+def maxpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
+    """Apply 2D max pooling with specified kernel size.
+
+    Args:
+        input: Input tensor (batch x channels x height x width)
+        kernel: (kernel_height, kernel_width) tuple
+
+    Returns:
+        Pooled output tensor
+
+    """
+    batch, channels, _, _ = input.shape
+    kh, kw = kernel
+
+    # Reshape input into patches
+    tiled, new_height, new_width = tile(input, (kh, kw))
+
+    # Take max over patch dimension
+    pooled = max(tiled, dim=4).contiguous()
+
+    # Reshape to final output size
+    return pooled.view(batch, channels, new_height, new_width)
+
+
+def dropout(input: Tensor, p: float = 0.5, ignore: bool = False) -> Tensor:
+    """Apply dropout with specified probability.
+
+    Args:
+        input: Input tensor
+        p: Dropout probability
+        ignore: If True, return input unchanged
+
+    Returns:
+        Output with dropout applied
+
+    """
+    if ignore or p <= 0.0:
+        return input
+    if p >= 1.0:
+        return input.zeros(input.shape)
+
+    # Generate and apply dropout mask
+    keep_mask = rand(input.shape) > p
+    return input * keep_mask
