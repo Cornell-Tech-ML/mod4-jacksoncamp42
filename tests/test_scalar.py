@@ -1,8 +1,8 @@
 from typing import Callable, Tuple
 
-import pytest
-from hypothesis import given
-from hypothesis.strategies import DrawFn, composite, floats
+import pytest  # type: ignore
+from hypothesis import given  # type: ignore
+from hypothesis.strategies import DrawFn, composite, floats  # type: ignore
 
 import minitorch
 from minitorch import (
