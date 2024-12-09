@@ -6,7 +6,6 @@ from .fast_ops import FastOps
 from .tensor import Tensor
 from .tensor_functions import Function, rand, tensor
 
-
 # List of functions in this file:
 # - avgpool2d: Tiled average pooling 2D
 # - argmax: Compute the argmax as a 1-hot tensor
@@ -36,7 +35,34 @@ def tile(input: Tensor, kernel: Tuple[int, int]) -> Tuple[Tensor, int, int]:
     assert height % kh == 0
     assert width % kw == 0
     # TODO: Implement for Task 4.3.
-    raise NotImplementedError("Need to implement for Task 4.3")
+    new_h = height // kh
+    new_w = width // kw
+
+    tensor = input.contiguous()
+
+    blocked = tensor.view(
+        batch,
+        channel,
+        new_h,
+        kh,
+        new_w,
+        kw,
+    )
+
+    blocked = blocked.permute(0, 1, 2, 4, 3, 5)
+
+    blocked = blocked.contiguous()
+
+    pooled = blocked.view(batch, channel, new_h, new_w, kh * kw)
+
+    return pooled, new_h, new_w
 
 
 # TODO: Implement for Task 4.3.
+def avgpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
+    """Compute average pooling."""
+    pooled_tensor, h_out, w_out = tile(input, kernel)
+
+    return pooled_tensor.mean(dim=4).view(
+        pooled_tensor.shape[0], pooled_tensor.shape[1], h_out, w_out
+    )

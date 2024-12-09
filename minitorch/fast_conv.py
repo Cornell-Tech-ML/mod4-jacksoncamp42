@@ -1,8 +1,8 @@
-from typing import Tuple, TypeVar, Any
+from typing import Any, Tuple, TypeVar
 
 import numpy as np
-from numba import prange
 from numba import njit as _njit
+from numba import prange
 
 from .autodiff import Context
 from .tensor import Tensor
@@ -10,8 +10,8 @@ from .tensor_data import (
     MAX_DIMS,
     Index,
     Shape,
-    Strides,
     Storage,
+    Strides,
     broadcast_index,
     index_to_position,
     to_index,
@@ -91,7 +91,42 @@ def _tensor_conv1d(
     s2 = weight_strides
 
     # TODO: Implement for Task 4.1.
-    raise NotImplementedError("Need to implement for Task 4.1")
+    # Parallelize over independent batch and output channel computations
+    for b in prange(batch):
+        for oc in prange(out_channels):
+            # These loops can be parallelized as they compute different output elements
+            for w in prange(out_width):
+                out_index = np.zeros(3, np.int32)
+                out_index[0] = b
+                out_index[1] = oc
+                out_index[2] = w
+                out_pos = index_to_position(out_index, out_strides)
+
+                acc = 0.0
+                # These loops must be sequential as they contribute to same accumulator
+                for ic in range(in_channels):
+                    for k in range(kw):
+                        if reverse:
+                            w_pos = w - (kw - 1) + k
+                        else:
+                            w_pos = w + k
+
+                        if 0 <= w_pos < width:
+                            in_index = np.zeros(3, np.int32)
+                            in_index[0] = b
+                            in_index[1] = ic
+                            in_index[2] = w_pos
+                            in_pos = index_to_position(in_index, input_strides)
+
+                            weight_index = np.zeros(3, np.int32)
+                            weight_index[0] = oc
+                            weight_index[1] = ic
+                            weight_index[2] = k if not reverse else (kw - 1 - k)
+                            weight_pos = index_to_position(weight_index, weight_strides)
+
+                            acc += input[in_pos] * weight[weight_pos]
+
+                out[out_pos] = acc
 
 
 tensor_conv1d = njit(_tensor_conv1d, parallel=True)
@@ -220,7 +255,53 @@ def _tensor_conv2d(
     s20, s21, s22, s23 = s2[0], s2[1], s2[2], s2[3]
 
     # TODO: Implement for Task 4.2.
-    raise NotImplementedError("Need to implement for Task 4.2")
+    batch_, out_channels, height_, width_ = out_shape
+    batch, in_channels, height, width = input_shape
+    out_channels_, in_channels_, kh, kw = weight_shape
+    # Parallelize over independent batch and output channel computations
+    for b in prange(batch):
+        for oc in prange(out_channels):
+            # These loops can be parallelized as they compute different output elements
+            for h in prange(height_):
+                for w in prange(width_):
+                    out_index = np.zeros(4, np.int32)
+                    out_index[0] = b
+                    out_index[1] = oc
+                    out_index[2] = h
+                    out_index[3] = w
+                    out_pos = index_to_position(out_index, out_strides)
+
+                    acc = 0.0
+                    # These loops must be sequential as they contribute to same accumulator
+                    for ic in range(in_channels):
+                        for kh_pos in range(kh):
+                            for kw_pos in range(kw):
+                                if reverse:
+                                    h_pos = h - (kh - 1) + kh_pos
+                                    w_pos = w - (kw - 1) + kw_pos
+                                else:
+                                    h_pos = h + kh_pos
+                                    w_pos = w + kw_pos
+
+                                if 0 <= h_pos < height and 0 <= w_pos < width:
+                                    # Use cached strides for faster access
+                                    in_pos = (
+                                        b * s10 + ic * s11 + h_pos * s12 + w_pos * s13
+                                    )
+
+                                    # Use cached strides for faster access
+                                    weight_pos = (
+                                        oc * s20
+                                        + ic * s21
+                                        + (kh_pos if not reverse else (kh - 1 - kh_pos))
+                                        * s22
+                                        + (kw_pos if not reverse else (kw - 1 - kw_pos))
+                                        * s23
+                                    )
+
+                                    acc += input[in_pos] * weight[weight_pos]
+
+                    out[out_pos] = acc
 
 
 tensor_conv2d = njit(_tensor_conv2d, parallel=True, fastmath=True)
