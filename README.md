@@ -38,7 +38,8 @@ The files that will be synced are:
 ## Task 4.5 Training Logs
 
 ### Sentiment
-* /logs/sentiment.txt
+* [View Example File](/logs/sentiment.txt)
 
 ### MNIST
-* /logs/mnist.txt
+* [View Example File](/logs/mnist.txt)
+
