@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Optional, Type
 
-import numpy as np
-from typing_extensions import Protocol
+import numpy as np  # type: ignore
+from typing_extensions import Protocol  # type: ignore
 
 from . import operators
 from .tensor_data import (

@@ -1,6 +1,6 @@
 from typing import Tuple
 
-import pytest
+import pytest  # type: ignore
 
 import minitorch
 from minitorch import Context, ScalarFunction, ScalarHistory

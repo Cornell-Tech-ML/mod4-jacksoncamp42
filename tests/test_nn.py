@@ -1,5 +1,5 @@
-import pytest
-from hypothesis import given
+import pytest  # type: ignore
+from hypothesis import given  # type: ignore
 
 import minitorch
 from minitorch import Tensor

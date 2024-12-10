@@ -1,9 +1,9 @@
 import random
 
 import embeddings
+from datasets import load_dataset
 
 import minitorch
-from datasets import load_dataset
 
 BACKEND = minitorch.TensorBackend(minitorch.FastOps)
 
@@ -35,7 +35,10 @@ class Conv1d(minitorch.Module):
 
     def forward(self, input):
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        output = minitorch.conv1d(input, self.weights.value)
+
+        # Add bias to each channel
+        return output + self.bias.value
 
 
 class CNNSentimentKim(minitorch.Module):
@@ -62,14 +65,44 @@ class CNNSentimentKim(minitorch.Module):
         super().__init__()
         self.feature_map_size = feature_map_size
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        # Create separate conv layers as attributes
+        self.conv1 = Conv1d(embedding_size, feature_map_size, filter_sizes[0])
+        self.conv2 = Conv1d(embedding_size, feature_map_size, filter_sizes[1])
+        self.conv3 = Conv1d(embedding_size, feature_map_size, filter_sizes[2])
+
+        # Linear layer for final classification
+        self.linear = Linear(feature_map_size, 1)
+        self.dropout = dropout
 
     def forward(self, embeddings):
         """
         embeddings tensor: [batch x sentence length x embedding dim]
         """
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        # Reshape for convolution: [batch, embedding_dim, sentence_length]
+        input_tensor = embeddings.permute(0, 2, 1)
+
+        # Apply convolutions and ReLU
+        conv_output1 = self.conv1.forward(input_tensor).relu()
+        conv_output2 = self.conv2.forward(input_tensor).relu()
+        conv_output3 = self.conv3.forward(input_tensor).relu()
+
+        # Max pooling over time
+        pooled1 = minitorch.max(conv_output1, dim=2)
+        pooled2 = minitorch.max(conv_output2, dim=2)
+        pooled3 = minitorch.max(conv_output3, dim=2)
+
+        # Sum pooled features
+        merged_features = pooled1 + pooled2 + pooled3
+        merged_features = merged_features.view(
+            merged_features.shape[0], merged_features.shape[1]
+        )
+
+        # Linear layer with dropout and sigmoid
+        output = self.linear.forward(merged_features)
+        output = minitorch.dropout(output, self.dropout, not self.training)
+
+        return output.sigmoid().view(embeddings.shape[0])
 
 
 # Evaluation helper methods
@@ -256,7 +289,7 @@ if __name__ == "__main__":
     train_size = 450
     validation_size = 100
     learning_rate = 0.01
-    max_epochs = 250
+    max_epochs = 50
 
     (X_train, y_train), (X_val, y_val) = encode_sentiment_data(
         load_dataset("glue", "sst2"),

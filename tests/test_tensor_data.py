@@ -1,10 +1,11 @@
-import pytest
-from hypothesis import given
-from hypothesis.strategies import DataObject, data
+import pytest  # type: ignore
+from hypothesis import given  # type: ignore
+from hypothesis.strategies import DataObject, data  # type: ignore
 
 import minitorch
 from minitorch import TensorData
 from minitorch.tensor_ops import SimpleBackend
+
 from .tensor_strategies import indices, tensor_data
 
 # ## Tasks 2.1

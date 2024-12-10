@@ -1,8 +1,8 @@
 from typing import Any, Tuple, TypeVar
 
-import numpy as np
-from numba import njit as _njit
-from numba import prange
+import numpy as np  # type: ignore
+from numba import njit as _njit  # type: ignore
+from numba import prange  # type: ignore
 
 from .autodiff import Context
 from .tensor import Tensor
@@ -23,10 +23,12 @@ def njit(fn: Fn, **kwargs: Any) -> Fn:
     """Just-in-time compile a function using Numba.
 
     Args:
+    ----
         fn (Fn): The function to be compiled.
         **kwargs: Additional keyword arguments for Numba's njit.
 
     Returns:
+    -------
         Fn: The compiled function.
 
     """

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar
 
-import numpy as np
-from numba import njit as _njit
-from numba import prange
+import numpy as np  # type: ignore
+from numba import njit as _njit  # type: ignore
+from numba import prange  # type: ignore
 
 from .tensor_data import (
     MAX_DIMS,
