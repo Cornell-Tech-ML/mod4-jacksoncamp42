@@ -38,8 +38,10 @@ The files that will be synced are:
 ## Task 4.5 Training Logs
 
 ### Sentiment
+* Best Valid accuracy of 76.00% across 50 epochs
 * [sentiment.txt](/logs/sentiment.txt)
 
 ### MNIST
+* 16/16 valid accuracy across 73 epochs
 * [mnist.txt](/logs/mnist.txt)
 
