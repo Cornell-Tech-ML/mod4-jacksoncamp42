@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from hypothesis import settings
-from hypothesis.strategies import (
+from hypothesis import settings  # type: ignore
+from hypothesis.strategies import (  # type: ignore
     DrawFn,
     SearchStrategy,
     composite,

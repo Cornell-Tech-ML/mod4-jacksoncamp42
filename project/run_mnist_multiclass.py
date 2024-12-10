@@ -42,7 +42,9 @@ class Conv2d(minitorch.Module):
 
     def forward(self, input):
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        # Use Conv2dFun.apply instead of conv2d directly
+        output = minitorch.Conv2dFun.apply(input, self.weights.value)
+        return output + self.bias.value
 
 
 class Network(minitorch.Module):
@@ -68,11 +70,45 @@ class Network(minitorch.Module):
         self.out = None
 
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        # First convolutional layer:
+        # in_channels=1 (grayscale), out_channels=4, kernel=3x3
+        self.conv1 = Conv2d(1, 4, 3, 3)
+
+        # Second convolutional layer:
+        # in_channels=4, out_channels=8, kernel=3x3
+        self.conv2 = Conv2d(4, 8, 3, 3)
+
+        # Linear layers:
+        # After convolutions and 4x4 pooling, size will be 392
+        self.linear1 = Linear(392, 64)
+        self.linear2 = Linear(64, C)  # C is number of classes (10)
+
+        # Dropout rate
+        self.dropout = 0.25
 
     def forward(self, x):
         # TODO: Implement for Task 4.5.
-        raise NotImplementedError("Need to implement for Task 4.5")
+        # First conv + ReLU
+        self.mid = self.conv1.forward(x)
+        x = self.mid.relu()
+
+        # Second conv + ReLU
+        self.out = self.conv2.forward(x)
+        x = self.out.relu()
+
+        # Use built-in avgpool2d
+        x = minitorch.avgpool2d(x, (4, 4))
+
+        # Flatten to 392 dimensions
+        x = x.view(x.shape[0], 392)
+
+        # Linear + ReLU + Dropout
+        x = self.linear1.forward(x).relu()
+        x = minitorch.dropout(x, self.dropout, self.training)
+
+        # Final linear and logsoftmax
+        x = self.linear2.forward(x)
+        return minitorch.logsoftmax(x, dim=1)
 
 
 def make_mnist(start, stop):

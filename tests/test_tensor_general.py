@@ -1,11 +1,17 @@
 import random
 from typing import Callable, Dict, Iterable, List, Tuple
 
-import numba
-import numba.cuda
-import pytest
-from hypothesis import given, settings
-from hypothesis.strategies import DataObject, data, integers, lists, permutations
+import numba  # type: ignore
+import numba.cuda  # type: ignore
+import pytest  # type: ignore
+from hypothesis import given, settings  # type: ignore
+from hypothesis.strategies import (  # type: ignore
+    DataObject,
+    data,
+    integers,
+    lists,
+    permutations,
+)
 
 import minitorch
 from minitorch import MathTestVariable, Tensor, TensorBackend, grad_check
